@@ -79,9 +79,11 @@ impl RecordBuffer {
     pub fn fetch(&mut self, chrom: &[u8], start: u64, end: u64) -> Result<(usize, usize)> {
         let mut added = 0;
         // move overflow from last fetch into ringbuffer
-        if self.overflow.is_some() {
-            added += 1;
-            self.inner.push_back(self.overflow.take().unwrap());
+        if self.overflow.is_some(){
+            if self.overflow.as_mut().unwrap().inner.core.pos <= end as i64 {
+                added += 1;
+                self.inner.push_back(self.overflow.take().unwrap());
+            }
         }
 
         if let Some(tid) = self.reader.header.tid(chrom) {
