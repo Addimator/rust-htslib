@@ -126,6 +126,7 @@ impl RecordBuffer {
                 }
 
                 let pos = self.buffer_record.pos();
+                warn1("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
 
                 // skip records before the start
                 if pos < start as i64 {
