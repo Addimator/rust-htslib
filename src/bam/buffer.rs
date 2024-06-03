@@ -8,6 +8,7 @@ use std::mem;
 use std::rc::Rc;
 use std::str;
 
+use log::warn;
 use crate::bam;
 use crate::bam::Read;
 use crate::errors::{Error, Result};
@@ -126,7 +127,7 @@ impl RecordBuffer {
                 }
 
                 let pos = self.buffer_record.pos();
-                warn1("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
+                warn!("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
 
                 // skip records before the start
                 if pos < start as i64 {
