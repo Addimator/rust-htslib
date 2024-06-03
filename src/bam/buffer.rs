@@ -141,6 +141,8 @@ impl RecordBuffer {
                 }
 
                 if pos >= end as i64 {
+                    warn!("Overflow: {:?}", pos);
+
                     self.overflow = Some(record);
                     break;
                 } else {
