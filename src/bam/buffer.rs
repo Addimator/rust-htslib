@@ -127,7 +127,7 @@ impl RecordBuffer {
                 }
 
                 let pos = self.buffer_record.pos();
-                warn!("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
+                // warn!("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
 
                 // skip records before the start
                 if pos < start as i64 {
@@ -143,7 +143,7 @@ impl RecordBuffer {
                 }
 
                 if pos >= end as i64 {
-                    warn!("Overflow: {:?}", pos);
+                    // warn!("Overflow: {:?}", pos);
 
                     self.overflow = Some(record);
                     break;
