@@ -8,7 +8,6 @@ use std::mem;
 use std::rc::Rc;
 use std::str;
 
-use log::warn;
 use crate::bam;
 use crate::bam::Read;
 use crate::errors::{Error, Result};
@@ -81,10 +80,10 @@ impl RecordBuffer {
         let mut added = 0;
         // move overflow from last fetch into ringbuffer
         if self.overflow.is_some(){
-            if self.overflow.as_mut().unwrap().inner.core.pos <= end as i64 {
-                added += 1;
-                self.inner.push_back(self.overflow.take().unwrap());
-            }
+            // if self.overflow.as_mut().unwrap().inner.core.pos <= end as i64 {
+            added += 1;
+            self.inner.push_back(self.overflow.take().unwrap());
+            // }
         }
 
         if let Some(tid) = self.reader.header.tid(chrom) {
@@ -144,7 +143,6 @@ impl RecordBuffer {
 
                 if pos >= end as i64 {
                     // warn!("Overflow: {:?}", pos);
-
                     self.overflow = Some(record);
                     break;
                 } else {

@@ -19,7 +19,6 @@ pre-release-commit-message = "release version {{version}}"
 tag-message = "Version {{version}} of Rust-HTSlib."
 
 [dependencies]
-log = "0.4.14"
 libz-sys = ">=1.1.15"
 bio-types = ">=0.9"
 byteorder = "1.3"
