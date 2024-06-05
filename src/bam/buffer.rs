@@ -78,12 +78,17 @@ impl RecordBuffer {
     #[allow(unused_assignments)] // TODO this is needed because rustc thinks that deleted is unused
     pub fn fetch(&mut self, chrom: &[u8], start: u64, end: u64) -> Result<(usize, usize)> {
         let mut added = 0;
+        let mut overflow_added = true;
         // move overflow from last fetch into ringbuffer
         if self.overflow.is_some(){
-            // if self.overflow.as_mut().unwrap().inner.core.pos <= end as i64 {
-            added += 1;
-            self.inner.push_back(self.overflow.take().unwrap());
-            // }
+            if self.overflow.as_mut().unwrap().inner.core.pos <= end as i64 {
+                added += 1;
+                self.inner.push_back(self.overflow.take().unwrap());
+                overflow_added = true;
+            }
+            else {
+                overflow_added = false;
+            }
         }
 
         if let Some(tid) = self.reader.header.tid(chrom) {
@@ -112,42 +117,44 @@ impl RecordBuffer {
             }
 
             // extend to the right
-            loop {
-                match self
-                    .reader
-                    .read(Rc::get_mut(&mut self.buffer_record).unwrap())
-                {
-                    None => break,
-                    Some(res) => res?,
-                }
+            if overflow_added {
+                loop {
+                    match self
+                        .reader
+                        .read(Rc::get_mut(&mut self.buffer_record).unwrap())
+                    {
+                        None => break,
+                        Some(res) => res?,
+                    }
 
-                if self.buffer_record.is_unmapped() {
-                    continue;
-                }
+                    if self.buffer_record.is_unmapped() {
+                        continue;
+                    }
 
-                let pos = self.buffer_record.pos();
-                // warn!("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
+                    let pos = self.buffer_record.pos();
+                    // warn!("Buffer pos: {:?},{:?},{:?}", pos, start,  end);
 
-                // skip records before the start
-                if pos < start as i64 {
-                    continue;
-                }
+                    // skip records before the start
+                    if pos < start as i64 {
+                        continue;
+                    }
 
-                // Record is kept, do not reuse it for next iteration
-                // and thus create a new one.
-                let mut record = mem::replace(&mut self.buffer_record, Rc::new(bam::Record::new()));
+                    // Record is kept, do not reuse it for next iteration
+                    // and thus create a new one.
+                    let mut record = mem::replace(&mut self.buffer_record, Rc::new(bam::Record::new()));
 
-                if self.cache_cigar {
-                    Rc::get_mut(&mut record).unwrap().cache_cigar();
-                }
+                    if self.cache_cigar {
+                        Rc::get_mut(&mut record).unwrap().cache_cigar();
+                    }
 
-                if pos >= end as i64 {
-                    // warn!("Overflow: {:?}", pos);
-                    self.overflow = Some(record);
-                    break;
-                } else {
-                    self.inner.push_back(record);
-                    added += 1;
+                    if pos >= end as i64 {
+                        // warn!("Overflow: {:?}", pos);
+                        self.overflow = Some(record);
+                        break;
+                    } else {
+                        self.inner.push_back(record);
+                        added += 1;
+                    }
                 }
             }
             self.start_pos = Some(self.start().unwrap_or(window_start));
